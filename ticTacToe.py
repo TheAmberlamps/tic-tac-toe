@@ -62,6 +62,49 @@ def charChoice():
     userChar = UNDERLINE + "O" + UNDEREND
     compChar = UNDERLINE + "X" + UNDEREND
 
+def winCheck(board):
+  global gameOver
+  diagFall = [board[0][0], board[1][1], board[2][2]]
+  diagRise = [board[2][0], board[1][1], board[0][2]]
+  # checks for diagonal victories
+  if all(x == userChar for x in diagFall) or all(x == userChar for x in diagRise):
+    printBoard(board)
+    print("Game over! You win!")
+    gameOver = True
+    return
+  elif all(x == compChar for x in diagFall) or all(x == compChar for x in diagRise):
+    printBoard(board)
+    print("Game over! Computer wins!")
+    gameOver = True
+    return
+  # checks for row victories
+  for rows in board:
+    if all(x == userChar for x in rows):
+      printBoard(board)
+      print("Game over! You win!")
+      gameOver = True
+      return
+    elif all(x == compChar for x in rows):
+      printBoard(board)
+      print("Game over! Computer wins!")
+      gameOver = True
+      return
+  # checks for column victories
+  i = 0
+  cols = len(board[0])
+  while i < cols:
+    if all(row[i] == userChar for row in board):
+      printBoard(board)
+      print("Game over! You win!")
+      gameOver = True
+      return
+    elif all(row[i] == compChar for row in board):
+      printBoard(board)
+      print("Game over! Computer wins!")
+      gameOver = True
+      return
+    i = i + 1
+
 def inputLogic():
   clrScr()
   board = boardInit()
@@ -79,13 +122,12 @@ def inputLogic():
     if validation == True:
       if board[entry[0]][entry[2]] == "_":
         board[entry[0]][entry[2]] = userChar
+        winCheck(board)
       else:
         print("Square already occupied, please choose another.")
-        return
     elif validation == "F2":
-        print("Choice not in range: no row or column index is less than 0 or greater than 2. Please try again.")
-        return
+      print("Choice not in range: no row or column index is less than 0 or greater than 2. Please try again.")
     else:
       print("Invalid entry, please try again.")
-      return
+
 inputLogic()
