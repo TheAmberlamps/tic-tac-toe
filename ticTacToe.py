@@ -1,9 +1,12 @@
 import math
+import time
 import random
 import platform
 import os
 
 gameOver = False
+
+uFirst = True
 
 userChar = ""
 compChar = ""
@@ -62,6 +65,26 @@ def charChoice():
     userChar = UNDERLINE + "O" + UNDEREND
     compChar = UNDERLINE + "X" + UNDEREND
 
+def coinFlip():
+  global uFirst
+  flip = random.random()
+  flipper = ['|', '/', '-', '\\']
+  flipTimes = 6
+  flipTicker = 0
+  while flipTicker < flipTimes:
+    for flips in flipper:
+      clrScr()
+      print(f'flipping a coin to determine who goes first: {flips}')
+      time.sleep(0.08)
+    flipTicker = flipTicker + 1
+  if flip < 0.5:
+    uFirst = False
+    print("Computer has first move.")
+    return False
+  else:
+    print("You have first move.")
+    return True
+
 def winCheck(board):
   global gameOver
   diagFall = [board[0][0], board[1][1], board[2][2]]
@@ -104,14 +127,33 @@ def winCheck(board):
       gameOver = True
       return
     i = i + 1
+  #checks for a tie game
+  all_match = all(char != "_" for row in board for char in row)
+  if all_match == True:
+    printBoard(board)
+    print("Tie game!")
+    gameOver = True
+    return
+
+def comPlayer(board):
+    randRow = random.randrange(len(board))
+    randCol = random.randrange(len(board[randRow]))
+    randPick = board[randRow][randCol]
+    if randPick == "_":
+      board[randRow][randCol] = compChar
+      winCheck(board)
+    else:
+      comPlayer(board)
 
 def inputLogic():
   clrScr()
   board = boardInit()
   instructions = "Choose a spot on the grid by row and column, seperated by a dash; for example, '1-1' for the center square or 0-2 for the top right (indexes start at 0, not 1)"
   charChoice()
+  order = coinFlip()
+  if order == False:
+    comPlayer(board)
   while gameOver == False:
-    clrScr()
     printBoard(board)
     print("\n" + instructions + "\n")
     user_choice = input("Enter your choice: ")
@@ -123,6 +165,8 @@ def inputLogic():
       if board[entry[0]][entry[2]] == "_":
         board[entry[0]][entry[2]] = userChar
         winCheck(board)
+        if gameOver == False:
+          comPlayer(board)
       else:
         print("Square already occupied, please choose another.")
     elif validation == "F2":
