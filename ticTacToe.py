@@ -2,11 +2,11 @@ import math
 import time
 import random
 import platform
+import sys
+import cursor
 import os
 
 gameOver = False
-
-uFirst = True
 
 userChar = ""
 compChar = ""
@@ -64,6 +64,7 @@ def charChoice():
   else:
     userChar = UNDERLINE + "O" + UNDEREND
     compChar = UNDERLINE + "X" + UNDEREND
+  print(f"\nYou have chosen {userChar}.\n")
 
 def coinFlip():
   global uFirst
@@ -71,18 +72,30 @@ def coinFlip():
   flipper = ['|', '/', '-', '\\']
   flipTimes = 6
   flipTicker = 0
+  cursor.hide()
   while flipTicker < flipTimes:
     for flips in flipper:
-      clrScr()
-      print(f'flipping a coin to determine who goes first: {flips}')
+      # write gives you far more control over writing to console than a normal print statement
+      # for example this is printing the text below, immediately displaying it, then returning the cursor to the beginning of the line and then over-writing the text with the updated text
+      # this is possible because write doesn't automatically inject a new line at the end of the text it displays, allowing for multiple updates on the same line
+      sys.stdout.write('\r')
+      sys.stdout.write(f"Flipping a coin to determine who has the first move: {flips}")
+      sys.stdout.flush()
       time.sleep(0.08)
     flipTicker = flipTicker + 1
+  sys.stdout.write("\b")
+  cursor.show()
   if flip < 0.5:
-    uFirst = False
+    sys.stdout.write(compChar + '\n\n')
+    sys.stdout.flush()
     print("Computer has first move.")
+    time.sleep(2.5)
     return False
   else:
+    sys.stdout.write(userChar + "\n\n")
+    sys.stdout.flush()
     print("You have first move.")
+    time.sleep(2.5)
     return True
 
 def winCheck(board):
@@ -91,11 +104,13 @@ def winCheck(board):
   diagRise = [board[2][0], board[1][1], board[0][2]]
   # checks for diagonal victories
   if all(x == userChar for x in diagFall) or all(x == userChar for x in diagRise):
+    clrScr()
     printBoard(board)
     print("Game over! You win!")
     gameOver = True
     return
   elif all(x == compChar for x in diagFall) or all(x == compChar for x in diagRise):
+    clrScr()
     printBoard(board)
     print("Game over! Computer wins!")
     gameOver = True
@@ -103,11 +118,13 @@ def winCheck(board):
   # checks for row victories
   for rows in board:
     if all(x == userChar for x in rows):
+      clrScr()
       printBoard(board)
       print("Game over! You win!")
       gameOver = True
       return
     elif all(x == compChar for x in rows):
+      clrScr()
       printBoard(board)
       print("Game over! Computer wins!")
       gameOver = True
@@ -117,11 +134,13 @@ def winCheck(board):
   cols = len(board[0])
   while i < cols:
     if all(row[i] == userChar for row in board):
+      clrScr()
       printBoard(board)
       print("Game over! You win!")
       gameOver = True
       return
     elif all(row[i] == compChar for row in board):
+      clrScr()
       printBoard(board)
       print("Game over! Computer wins!")
       gameOver = True
@@ -130,6 +149,7 @@ def winCheck(board):
   #checks for a tie game
   all_match = all(char != "_" for row in board for char in row)
   if all_match == True:
+    clrScr()
     printBoard(board)
     print("Tie game!")
     gameOver = True
@@ -151,9 +171,14 @@ def inputLogic():
   instructions = "Choose a spot on the grid by row and column, seperated by a dash; for example, '1-1' for the center square or 0-2 for the top right (indexes start at 0, not 1)"
   charChoice()
   order = coinFlip()
+  bogey = False
   if order == False:
     comPlayer(board)
   while gameOver == False:
+    clrScr()
+    if bogey != False:
+      print(bogey + "\n")
+      bogey = False
     printBoard(board)
     print("\n" + instructions + "\n")
     user_choice = input("Enter your choice: ")
@@ -168,10 +193,10 @@ def inputLogic():
         if gameOver == False:
           comPlayer(board)
       else:
-        print("Square already occupied, please choose another.")
+        bogey = "Square already occupied, please choose another."
     elif validation == "F2":
-      print("Choice not in range: no row or column index is less than 0 or greater than 2. Please try again.")
+      bogey = "Choice not in range: no row or column index is less than 0 or greater than 2. Please try again."
     else:
-      print("Invalid entry, please try again.")
+      bogey= "Invalid entry, please try again."
 
 inputLogic()
