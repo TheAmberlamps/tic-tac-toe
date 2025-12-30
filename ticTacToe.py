@@ -99,56 +99,46 @@ def coinFlip():
     return True
 
 def winCheck(board):
-  global gameOver
   diagFall = [board[0][0], board[1][1], board[2][2]]
   diagRise = [board[2][0], board[1][1], board[0][2]]
+  pVic = "You win!"
+  cVic = "Computer wins!"
+  def result(winner):
+    global gameOver
+    clrScr()
+    printBoard(board)
+    print(f"Game over! {winner}")
+    gameOver = True
   # checks for diagonal victories
   if all(x == userChar for x in diagFall) or all(x == userChar for x in diagRise):
-    clrScr()
-    printBoard(board)
-    print("Game over! You win!")
-    gameOver = True
+    result(pVic)
     return
   elif all(x == compChar for x in diagFall) or all(x == compChar for x in diagRise):
-    clrScr()
-    printBoard(board)
-    print("Game over! Computer wins!")
-    gameOver = True
+    result(cVic)
     return
   # checks for row victories
   for rows in board:
     if all(x == userChar for x in rows):
-      clrScr()
-      printBoard(board)
-      print("Game over! You win!")
-      gameOver = True
+      result(pVic)
       return
     elif all(x == compChar for x in rows):
-      clrScr()
-      printBoard(board)
-      print("Game over! Computer wins!")
-      gameOver = True
+      result(cVic)
       return
   # checks for column victories
   i = 0
   cols = len(board[0])
   while i < cols:
     if all(row[i] == userChar for row in board):
-      clrScr()
-      printBoard(board)
-      print("Game over! You win!")
-      gameOver = True
+      result(pVic)
       return
     elif all(row[i] == compChar for row in board):
-      clrScr()
-      printBoard(board)
-      print("Game over! Computer wins!")
-      gameOver = True
+      result(cVic)
       return
     i = i + 1
   #checks for a tie game
   all_match = all(char != "_" for row in board for char in row)
   if all_match == True:
+    global gameOver
     clrScr()
     printBoard(board)
     print("Tie game!")
@@ -164,6 +154,18 @@ def comPlayer(board):
       winCheck(board)
     else:
       comPlayer(board)
+
+def geniusComPlayer(board):
+  emptyCheck = all(char == "_" for row in board for char in row)
+  if emptyCheck:
+    randRow = random.randrange(len(board))
+    randCol = random.randrange(len(board[randRow]))
+    board[randRow][randCol] = compChar
+  else:
+    print("just holding space")
+
+def miniMax(state):
+  print("study the minimax that google spits out and implement it here")
 
 def inputLogic():
   clrScr()
