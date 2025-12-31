@@ -98,52 +98,59 @@ def coinFlip():
     time.sleep(2.5)
     return True
 
-def winCheck(board):
+def winCheck(board, player, useCase):
   diagFall = [board[0][0], board[1][1], board[2][2]]
   diagRise = [board[2][0], board[1][1], board[0][2]]
-  pVic = "You win!"
+  pChar = player
+  uVic = "You win!"
   cVic = "Computer wins!"
-  def result(winner):
-    global gameOver
-    clrScr()
-    printBoard(board)
-    print(f"Game over! {winner}")
-    gameOver = True
+  def result(winner, useCase):
+    if useCase == 'norm':
+      global gameOver
+      clrScr()
+      printBoard(board)
+      print(f"Game over! {winner}")
+      gameOver = True
+    else:
+      if winner == compChar:
+        return 1
+      else:
+        return -1
   # checks for diagonal victories
-  if all(x == userChar for x in diagFall) or all(x == userChar for x in diagRise):
-    result(pVic)
-    return
-  elif all(x == compChar for x in diagFall) or all(x == compChar for x in diagRise):
-    result(cVic)
-    return
+  if all(x == pChar for x in diagFall) or all(x == pChar for x in diagRise):
+    if pChar == userChar:
+      return result(uVic, useCase)
+    else:
+      return result(cVic, useCase)
   # checks for row victories
   for rows in board:
-    if all(x == userChar for x in rows):
-      result(pVic)
-      return
-    elif all(x == compChar for x in rows):
-      result(cVic)
-      return
+    if all(x == pChar for x in rows):
+      if pChar == userChar:
+        return result(uVic, useCase)
+      else:
+        return result(cVic, useCase)
   # checks for column victories
   i = 0
   cols = len(board[0])
   while i < cols:
-    if all(row[i] == userChar for row in board):
-      result(pVic)
-      return
-    elif all(row[i] == compChar for row in board):
-      result(cVic)
-      return
+    if all(row[i] == pChar for row in board):
+      if pChar == userChar:
+        return result(uVic, useCase)
+      else:
+        return result(cVic, useCase)
     i = i + 1
   #checks for a tie game
-  all_match = all(char != "_" for row in board for char in row)
-  if all_match == True:
-    global gameOver
-    clrScr()
-    printBoard(board)
-    print("Tie game!")
-    gameOver = True
-    return
+  if all(char != "_" for row in board for char in row):
+    if useCase == 'norm':
+      global gameOver
+      clrScr()
+      printBoard(board)
+      print("Tie game!")
+      gameOver = True
+      return
+    else:
+      return 3
+  return 0
 
 def comPlayer(board):
     randRow = random.randrange(len(board))
@@ -151,7 +158,7 @@ def comPlayer(board):
     randPick = board[randRow][randCol]
     if randPick == "_":
       board[randRow][randCol] = compChar
-      winCheck(board)
+      winCheck(board, compChar, 'norm')
     else:
       comPlayer(board)
 
@@ -163,6 +170,11 @@ def geniusComPlayer(board):
     board[randRow][randCol] = compChar
   else:
     print("just holding space")
+
+def get_moves(board):
+  indexed_elements = [(i, j, board[i][j]) for i in range(len(board)) for j in range(len(board[0])) if board[i][j] == '_']
+  print(f"potential moves: {indexed_elements}")
+  return len(indexed_elements)
 
 def miniMax(state):
   print("study the minimax that google spits out and implement it here")
@@ -183,6 +195,7 @@ def inputLogic():
       bogey = False
     printBoard(board)
     print("\n" + instructions + "\n")
+    print(get_moves(board))
     user_choice = input("Enter your choice: ")
     # spreads user entry into a list, keeping strings as strings but casting them to int if they are numbers
     entry = [int(char) if char.isdigit() else char for char in user_choice]
@@ -191,7 +204,7 @@ def inputLogic():
     if validation == True:
       if board[entry[0]][entry[2]] == "_":
         board[entry[0]][entry[2]] = userChar
-        winCheck(board)
+        winCheck(board, userChar, 'norm')
         if gameOver == False:
           comPlayer(board)
       else:
