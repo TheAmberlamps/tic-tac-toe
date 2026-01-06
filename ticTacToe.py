@@ -8,6 +8,8 @@ import os
 
 gameOver = False
 
+diff = "E"
+
 userChar = ""
 compChar = ""
 
@@ -43,6 +45,22 @@ def validate(entry):
       return 'F2'
   else:
     return False
+
+def difficulty():
+  dummyFlag = False
+  global diff
+  while True:
+    clrScr()
+    if dummyFlag:
+      dummyFlag = False
+      print("Invalid choice:")
+    choice = input("Please enter 'e' to play easy mode, or 'h' for hard: ").upper()
+    if choice in ["E", "H"]:
+      if choice == "H":
+        diff = "H"
+      break
+    else:
+      dummyFlag = True
 
 def charChoice():
   global userChar
@@ -98,10 +116,9 @@ def coinFlip():
     time.sleep(2.5)
     return True
 
-def winCheck(board, player, useCase):
+def winCheck(board, useCase):
   diagFall = [board[0][0], board[1][1], board[2][2]]
   diagRise = [board[2][0], board[1][1], board[0][2]]
-  pChar = player
   uVic = "You win!"
   cVic = "Computer wins!"
   def result(winner, useCase):
@@ -117,27 +134,24 @@ def winCheck(board, player, useCase):
       else:
         return -1
   # checks for diagonal victories
-  if all(x == pChar for x in diagFall) or all(x == pChar for x in diagRise):
-    if pChar == userChar:
+  if all(x == userChar for x in diagFall) or all(x == userChar for x in diagRise):
       return result(uVic, useCase)
-    else:
+  if all(x == compChar for x in diagFall) or all(x == compChar for x in diagRise):
       return result(cVic, useCase)
   # checks for row victories
   for rows in board:
-    if all(x == pChar for x in rows):
-      if pChar == userChar:
-        return result(uVic, useCase)
-      else:
-        return result(cVic, useCase)
+    if all(x == userChar for x in rows):
+      return result(uVic, useCase)
+    if all(x == compChar for x in rows):
+      return result(cVic, useCase)
   # checks for column victories
   i = 0
   cols = len(board[0])
   while i < cols:
-    if all(row[i] == pChar for row in board):
-      if pChar == userChar:
-        return result(uVic, useCase)
-      else:
-        return result(cVic, useCase)
+    if all(row[i] == userChar for row in board):
+      return result(uVic, useCase)
+    if all(row[i] == compChar for row in board):
+      return result(cVic, useCase)
     i = i + 1
   #checks for a tie game
   if all(char != "_" for row in board for char in row):
@@ -150,7 +164,7 @@ def winCheck(board, player, useCase):
       return
     else:
       return 0
-  return False
+  return None
 
 def comPlayer(board):
     randRow = random.randrange(len(board))
@@ -158,7 +172,7 @@ def comPlayer(board):
     randPick = board[randRow][randCol]
     if randPick == "_":
       board[randRow][randCol] = compChar
-      winCheck(board, compChar, 'norm')
+      winCheck(board, 'norm')
       #miniMax(board, True)
     else:
       comPlayer(board)
@@ -172,40 +186,41 @@ def geniusComPlayer(board):
   else:
     best_score = -math.inf
     best_move = None
-    for row, col in get_moves(board):
-      board[row][col] = compChar
+    for moves in get_moves(board):
+      board[moves[0]][moves[1]] = compChar
       score = miniMax(board, False)
-      board[row][col] = "_"
+      board[moves[0]][moves[1]] = "_"
       if score > best_score:
         best_score = score
-        best_move = [row, col]
+        best_move = [moves[0], moves[1]]
     board[best_move[0]][best_move[1]] = compChar
-    winCheck(board, compChar, 'norm')
+    winCheck(board, 'norm')
   
 def get_moves(board):
-  indexed_elements = [(i, j) for i in range(len(board)) for j in range(len(board[0])) if board[i][j] == '_']
+  indexed_elements = [[i, j] for i in range(len(board)) for j in range(len(board[0])) if board[i][j] == '_']
   #print(f"potential moves: {indexed_elements}")
   return indexed_elements
 
 def miniMax(board, isMax):
-  if winCheck(board, compChar, False):
-    return winCheck(board, compChar, False)
+  terminal = winCheck(board, False)
+  if terminal != None:
+    return terminal
   
   if isMax:
     best_score = -math.inf
-    for row, col in get_moves(board):
-      board[row][col] = compChar
+    for moves in get_moves(board):
+      board[moves[0]][moves[1]] = compChar
       score = miniMax(board, False)
-      board[row][col] = "_"
+      board[moves[0]][moves[1]] = "_"
       best_score = max(best_score, score)
     return best_score
   
   else:
     best_score = math.inf
-    for row, col in get_moves(board):
-      board[row][col] = userChar
+    for moves in get_moves(board):
+      board[moves[0]][moves[1]] = userChar
       score = miniMax(board, True)
-      board[row][col] = "_"
+      board[moves[0]][moves[1]] = "_"
       best_score = min(best_score, score)
     return best_score
 
@@ -213,11 +228,15 @@ def inputLogic():
   clrScr()
   board = boardInit()
   instructions = "Choose a spot on the grid by row and column, seperated by a dash; for example, '1-1' for the center square or 0-2 for the top right (indexes start at 0, not 1)"
+  difficulty()
   charChoice()
   order = coinFlip()
   bogey = False
   if order == False:
-    geniusComPlayer(board)
+    if diff == "H":
+      geniusComPlayer(board)
+    else:
+      comPlayer(board)
   while gameOver == False:
     clrScr()
     if bogey != False:
@@ -233,9 +252,12 @@ def inputLogic():
     if validation == True:
       if board[entry[0]][entry[2]] == "_":
         board[entry[0]][entry[2]] = userChar
-        winCheck(board, userChar, 'norm')
+        winCheck(board, 'norm')
         if gameOver == False:
-          geniusComPlayer(board)
+          if diff == "H":
+            geniusComPlayer(board)
+          else:
+            comPlayer(board)
       else:
         bogey = "Square already occupied, please choose another."
     elif validation == "F2":
