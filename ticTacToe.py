@@ -112,7 +112,7 @@ def winCheck(board, player, useCase):
       print(f"Game over! {winner}")
       gameOver = True
     else:
-      if winner == compChar:
+      if winner == cVic:
         return 1
       else:
         return -1
@@ -149,8 +149,8 @@ def winCheck(board, player, useCase):
       gameOver = True
       return
     else:
-      return 3
-  return 0
+      return 0
+  return False
 
 def comPlayer(board):
     randRow = random.randrange(len(board))
@@ -159,6 +159,7 @@ def comPlayer(board):
     if randPick == "_":
       board[randRow][randCol] = compChar
       winCheck(board, compChar, 'norm')
+      #miniMax(board, True)
     else:
       comPlayer(board)
 
@@ -169,15 +170,44 @@ def geniusComPlayer(board):
     randCol = random.randrange(len(board[randRow]))
     board[randRow][randCol] = compChar
   else:
-    print("just holding space")
-
+    best_score = -math.inf
+    best_move = None
+    for row, col in get_moves(board):
+      board[row][col] = compChar
+      score = miniMax(board, False)
+      board[row][col] = "_"
+      if score > best_score:
+        best_score = score
+        best_move = [row, col]
+    board[best_move[0]][best_move[1]] = compChar
+    winCheck(board, compChar, 'norm')
+  
 def get_moves(board):
-  indexed_elements = [(i, j, board[i][j]) for i in range(len(board)) for j in range(len(board[0])) if board[i][j] == '_']
-  print(f"potential moves: {indexed_elements}")
-  return len(indexed_elements)
+  indexed_elements = [(i, j) for i in range(len(board)) for j in range(len(board[0])) if board[i][j] == '_']
+  #print(f"potential moves: {indexed_elements}")
+  return indexed_elements
 
-def miniMax(state):
-  print("study the minimax that google spits out and implement it here")
+def miniMax(board, isMax):
+  if winCheck(board, compChar, False):
+    return winCheck(board, compChar, False)
+  
+  if isMax:
+    best_score = -math.inf
+    for row, col in get_moves(board):
+      board[row][col] = compChar
+      score = miniMax(board, False)
+      board[row][col] = "_"
+      best_score = max(best_score, score)
+    return best_score
+  
+  else:
+    best_score = math.inf
+    for row, col in get_moves(board):
+      board[row][col] = userChar
+      score = miniMax(board, True)
+      board[row][col] = "_"
+      best_score = min(best_score, score)
+    return best_score
 
 def inputLogic():
   clrScr()
@@ -187,7 +217,7 @@ def inputLogic():
   order = coinFlip()
   bogey = False
   if order == False:
-    comPlayer(board)
+    geniusComPlayer(board)
   while gameOver == False:
     clrScr()
     if bogey != False:
@@ -195,7 +225,6 @@ def inputLogic():
       bogey = False
     printBoard(board)
     print("\n" + instructions + "\n")
-    print(get_moves(board))
     user_choice = input("Enter your choice: ")
     # spreads user entry into a list, keeping strings as strings but casting them to int if they are numbers
     entry = [int(char) if char.isdigit() else char for char in user_choice]
@@ -206,7 +235,7 @@ def inputLogic():
         board[entry[0]][entry[2]] = userChar
         winCheck(board, userChar, 'norm')
         if gameOver == False:
-          comPlayer(board)
+          geniusComPlayer(board)
       else:
         bogey = "Square already occupied, please choose another."
     elif validation == "F2":
